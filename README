@@ -28,7 +28,7 @@ Each channel has an individually adjustable 4096-step grayscale PWM brightness c
 Both grayscale control and dot correction are accessible via a serial interface (SPI).
 For grayscale control the atmega has to feed in 24 bytes of data (16 * 12 bit).
 
-The microcontroller received its data via an i2c bus.
+The microcontroller receives its data via an i2c bus.
 
 
 MASTER MODULE
