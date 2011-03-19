@@ -1,0 +1,45 @@
+************
+* pentawall
+************
+
+This project aims to build a full-RGB LED-wall with a resolution of at least 15x15 pixels. 
+
+This is done using stackable 5x1 LED modules. (pentawall because its 5 LEDs per module)
+
+I produced 50 of these modules and finished a 15x16 Wall as you can see here: http://vimeo.com/21198058 and http://vimeo.com/21123365
+
+
+
+
+*****
+* technical overview
+*****
+
+LED MODULE
+==========
+
+each module consists of 
+- 5 LEDs ( Osram LRTB G6TG )
+- 1 LED controller ( Textas Instruments TLC5941 ) 
+- 1 microcontroller ( Atmel ATMEGA168pa ) 
+
+The TLC5941 is a 16-channel, constant-current sink, LED driver. Here only 15 channels are in use (5 LEDs * 3 colors).
+Each channel has an individually adjustable 4096-step grayscale PWM brightness control and a 64-step constant-current sink (dot correction).
+Both grayscale control and dot correction are accessible via a serial interface (SPI).
+For grayscale control the atmega has to feed in 24 bytes of data (16 * 12 bit).
+
+The microcontroller received its data via an i2c bus.
+
+
+MASTER MODULE
+=============
+
+consists of
+- atmega644p
+- ft232rl
+
+the master module recives data via USB and feeds that data to the led modules via i2c bus.
+Using this master any PC with USB can control the LED wall. If you have i2c on you computer you dont need this module. 
+
+
+

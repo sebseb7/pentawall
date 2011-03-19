@@ -1,0 +1,3 @@
+This is the Code for the microcontroller on the X5LED board.
+
+it acts as a i2c slave and receives data over the i2c bus to set led channel brightness
