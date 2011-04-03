@@ -5,6 +5,7 @@ import Text.Printf
 type Word = Int
 
 data Color = RGB Word Word Word
+           | RGBDouble Double Double Double
 type Position = (Word, Word)
 
 data Instruction = Blank Color
@@ -23,9 +24,17 @@ command2 :: Position -> Color -> String
 command2 (x, y) (RGB r g b) = 
   printf "02%02x%02x%02x%02x%02x\r\n" x y r g b
 
-command3 colors = "03" ++ concatMap (\(RGB r g b) ->
-                                      printf "%02x%02x%02x" r g b
-                                    ) colors ++ "\r\n"
+command3 colors = "03" ++ concatMap colorToHex colors ++ "\r\n"
+
+colorToHex :: Color -> String
+colorToHex (RGB r g b) = printf "%02x%02x%02x" r g b
+colorToHex (RGBDouble r g b) = colorToHex $
+                               RGB (c r) (c g) (c b)
+    where c :: Double -> Word
+          c = truncate .
+              (* 255.0) .
+              min 1.0 .
+              max 0.0
 
 instructionToCommand :: Instruction -> String
 instructionToCommand (Blank color) = command2 (0, 0) color
