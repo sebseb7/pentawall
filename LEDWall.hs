@@ -25,7 +25,7 @@ command2 (x, y) (RGB r g b) =
 
 command3 colors = "03" ++ concatMap (\(RGB r g b) ->
                                       printf "%02x%02x%02x" r g b
-                                    ) pixels ++ "\r\n"
+                                    ) colors ++ "\r\n"
 
 instructionToCommand :: Instruction -> String
 instructionToCommand (Blank color) = command2 (0, 0) color
@@ -34,5 +34,5 @@ instructionToCommand (Frame colors) = command3 colors
 
 runAnimation :: IO [[Color]] -> IO ()
 runAnimation gen = gen >>= 
-                   (putStr . concatMap instructionToCommand . generateOutput) >>
+                   (putStr . instructionToCommand . Frame . concat) >>
                    runAnimation gen
