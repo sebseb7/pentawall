@@ -7,11 +7,14 @@ import LEDWall
 data TunnelState = Tunnel
 
 tunnel :: StateT TunnelState IO [[Color]]
-tunnel = forM [1..16] $ \y ->
-         forM [1..15] $ \x ->
-         do let distance = sqrt $ (fromIntegral $ y - 8) ** 2 + (fromIntegral $ x - 8) ** 2
+tunnel = forM (map (+ 0.01) [-7..8]) $ \y ->
+         forM (map (+ 0.01) [-7..7]) $ \x ->
+         do let distance = sqrt $ x ** 2 + y ** 2
+                angle = atan (y / x) + (pi / 2) + (if x > 0 then 0 else pi)
                 a = distance / 8
-            return $ RGBDouble a a a
+                b = angle / (2 * pi)
+            --liftIO $ putStrLn $ show $ (x, y, angle / pi)
+            return $ RGBDouble b a 0
 
 main = do stateRef <- newIORef Tunnel
           runAnimation $ do st <- readIORef stateRef
