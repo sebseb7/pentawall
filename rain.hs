@@ -1,6 +1,7 @@
 import Control.Monad.State.Lazy
 import System.Random
 import Control.Applicative
+import Data.List (transpose)
 import LEDWall
 
 data Drop = Drop Word Word Color
@@ -17,13 +18,15 @@ addColors (RGBDouble r g b) (RGBDouble r' g' b') = RGBDouble (r + r') (g + g') (
 
 dropColors :: Drop -> [[Color]]
 dropColors (Drop dropX dropY dropColor) = 
+  transpose $
+  reverse $
   map (\y ->
         map (\x ->
               if dropX == x && y <= dropY
-              then mapColor (* (max 0 $ 1 - fromIntegral (dropY - y) / 8)) dropColor
+              then mapColor (* (max 0 $ 1 - fromIntegral (dropY - y) / 16)) dropColor
               else RGBDouble 0 0 0
-            ) [0..14]
-      ) [0..15]
+            ) [0..15]
+      ) [0..14]
 
 composeDrops :: RainAction [[Color]]
 composeDrops = do Rain drops <- get
