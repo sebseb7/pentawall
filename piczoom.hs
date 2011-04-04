@@ -1,4 +1,4 @@
-{-# LANGUAGE TupleSections #-}
+{-# LANGUAGE TupleSections,ScopedTypeVariables #-}
 module Main (main, main') where
 
 import Control.Monad.State.Lazy
@@ -28,7 +28,7 @@ type ZoomAction a = StateT ZoomState IO a
 
 type Picture = UArray (Int, Int) Int
 
-transitionDuration = 50
+transitionDuration = 100
 
 getT :: ZoomAction Double
 getT = (/ transitionDuration) <$>
@@ -55,7 +55,13 @@ advance = do st <- get
 getColor :: Int -> Int -> ZoomAction Color
 getColor x y = do picture <- zoomPic <$> get
                   --liftIO $ putStrLn $ "getColor " ++ show x ++ " " ++ show y
-                  return $ colorToRGB $ picture ! (x, y)
+                  (w, h) <- zoomWH <$> get
+                  case (w, y) of
+                    _ | (x >= 0 && y >= 0 &&
+                         x < w && y < h) ->
+                        return $ colorToRGB $ picture ! (x, y)
+                    _ ->
+                        return $ RGB 0 0 0
     where colorToRGB :: Int -> Color
           colorToRGB c = let r = c `shiftR` 16
                              g = c `shiftR` 8
@@ -64,14 +70,16 @@ getColor x y = do picture <- zoomPic <$> get
               where norm = fromIntegral . (.&. 0xFF)
 
 
-sampleColor :: Int -> Int -> ZoomAction Color
-sampleColor x y = do (w, h) <- zoomWH <$> get
-                     case (w, y) of
-                       _ | (x >= 0 && y >= 0 &&
-                            x < w && y < h) ->
-                           getColor x y
-                       _ ->
-                           return $ RGB 0 0 0
+sampleColor :: Int -> Int -> Int -> ZoomAction Color
+sampleColor x y zoom = do (r :: Int, g :: Int, b :: Int) <-
+                              foldM (\(r, g, b) (x', y') ->
+                                      do RGB r' g' b' <- getColor x' y'
+                                         return (r + fromIntegral r', g + fromIntegral g', b + fromIntegral b')
+                                    ) (0, 0, 0) [(x', y')
+                                                 | x' <- [x..(x + zoom - 1)],
+                                                   y' <- [y..(y + zoom - 1)]]
+                          let l = zoom * zoom
+                          return $ RGB (fromIntegral $ r `div` l) (fromIntegral $ g `div` l) (fromIntegral $ b `div` l)
 
 getAlpha :: ZoomAction Double
 getAlpha = do t <- getT
@@ -83,11 +91,15 @@ compose = do a <- getAlpha
              (tx, ty) <- zoomTarget <$> get
              let (dx, dy) = (truncate $ fromIntegral sx * (1.0 - a) + fromIntegral tx * a, 
                              truncate $ fromIntegral sy * (1.0 - a) + fromIntegral ty * a)
+                 zoom | a < 0.5 = (a * 2)
+                      | otherwise = 1.0 - (a - 0.5) * 2
+                 zoom' = 1.0 + 20 * zoom
+             --liftIO $ hPutStr stderr $ "zoom=" ++ show zoom' ++ "\n"
              transpose <$> reverse <$>
                            (forM [0..14] $ \y ->
                             forM [0..15] $ \x ->
-                            --liftIO (putStrLn $ show (dx + x, dy + y)) >>
-                            sampleColor (dx + x) (dy + y))
+                            --liftIO (hPutStr stderr $ show (x, y, dx + truncate (fromIntegral x * zoom'), dy + truncate (fromIntegral y * zoom'))) >>
+                            sampleColor (dx + truncate (fromIntegral (x - 7) * zoom' + 7)) (dy + truncate (fromIntegral (y - 7) * zoom' + 7)) (truncate zoom'))
 
 zoomer = do advance
             compose
