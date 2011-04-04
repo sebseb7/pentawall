@@ -1,6 +1,5 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
-#include <avr/pgmspace.h>
 #include <avr/wdt.h>
 #include <util/delay.h>
 #include <stdarg.h>
@@ -91,24 +90,5 @@ void USART_putc (char c)
 {
 	loop_until_bit_is_set(UCSRA, UDRE);
 	UDR = c;
-}
-
-
-void USART_puts (char *s)
-{
-	while (*s)
-	{
-		USART_putc (*s);
-		s++;
-	}
-}
-
-void USART_puts_p (const char *s)
-{
-	while (pgm_read_byte(s))
-	{
-		USART_putc (pgm_read_byte(s));
-		s++;
-	}
 }
 

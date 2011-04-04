@@ -8,8 +8,6 @@
 
 void USART_Init (void);
 void USART_putc (char c);
-void USART_puts (char *s);
-void USART_puts_p (const char *s);
 uint8_t uart_getc_nb(uint8_t*);
 
 

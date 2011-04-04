@@ -1,8 +1,6 @@
 #include <inttypes.h>
 #include <avr/io.h>
 #include <avr/interrupt.h>
-#include <avr/pgmspace.h>
-#include <avr/eeprom.h>
 #include <util/delay.h>
 
 #include "main.h"
