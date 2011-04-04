@@ -14,8 +14,8 @@
 
 ideas to optimize the code:
 
-- not more uart buffer, directly write to two full-frame bufferd and 2 single LED buffers
-- do the parsing in the Uarts ISR (keep in mind that the ISR should be as short as possible)
+- not more uart buffer, directly write to two full-frame buffers and 2 single LED buffers
+- do the parsing in the Usart ISR (keep in mind that the ISR should be as short as possible)
 - set xoff if one fullframe/led buffer is full and the second one is 50% filled
 - the while loop then only polls buffer status 
 
@@ -166,7 +166,7 @@ int main (void)
 			}
 			
 		
-			if(mode == 2)
+			if(mode == 1)
 			{
 				ledbuffer[idx]=data;
 				idx++;
