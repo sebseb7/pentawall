@@ -38,9 +38,11 @@ getTube zOff = do cameraZ <- tunnelCameraZ <$> get
                     True -> getNewestTube
                     False -> return $ Seq.index tubes $ fromInteger offset
 
+cameraSpeed = 0.3
+
 advanceCamera :: TunnelAction ()
 advanceCamera = do st <- get
-                   let cameraZ = tunnelCameraZ st + 0.3
+                   let cameraZ = tunnelCameraZ st + cameraSpeed
                        cameraAngle = tunnelCameraAngle st + 0.05
                        (tubesZ, tubes)
                            | fromIntegral (tunnelTubesZ st) < cameraZ - 1 =
@@ -89,7 +91,8 @@ tunnel = do advanceCamera
                    let colors = tubeColors tube
                        angle' = angle + cameraAngle + tubeAngle tube
                        color = cycle colors !! (truncate $ angle' * (fromIntegral $ length colors) / (2 * pi))
-                       color' = mapColor (/ (0.5 + log z)) color
+                       shading = 0.5 + log z
+                       color' = mapColor (/ shading) color
                    return color'
                    
 mapColor :: (Double -> Double) -> Color -> Color
