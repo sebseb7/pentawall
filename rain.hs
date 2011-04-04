@@ -26,7 +26,7 @@ dropColors (Drop dropX dropY dropColor) =
               then mapColor (* (max 0 $ 1 - fromIntegral (dropY - y) / 16)) dropColor
               else RGBDouble 0 0 0
             ) [0..15]
-      ) [0..14]
+      ) [0..15]
 
 composeDrops :: RainAction [[Color]]
 composeDrops = do Rain drops <- get
@@ -54,7 +54,7 @@ rainDown = do Rain drops <- get
 addDrop rRange gRange bRange = 
   do Rain drops <- get
              
-     x <- fromInteger <$> (liftIO $ randomRIO (0, 14))
+     x <- fromInteger <$> (liftIO $ randomRIO (0, 15))
      r <- liftIO $ randomRIO rRange
      g <- liftIO $ randomRIO gRange
      b <- liftIO $ randomRIO bRange
