@@ -28,7 +28,7 @@ type ZoomAction a = StateT ZoomState IO a
 
 type Picture = UArray (Int, Int) Int
 
-transitionDuration = 100
+transitionDuration = 60
 
 getT :: ZoomAction Double
 getT = (/ transitionDuration) <$>
@@ -78,7 +78,7 @@ sampleColor x y zoom = do (r :: Int, g :: Int, b :: Int) <-
                                     ) (0, 0, 0) [(x', y')
                                                  | x' <- [x..(x + zoom - 1)],
                                                    y' <- [y..(y + zoom - 1)]]
-                          let l = zoom * zoom
+                          let l = max 1 $ (zoom - 1) ^ 2
                           return $ RGB (fromIntegral $ r `div` l) (fromIntegral $ g `div` l) (fromIntegral $ b `div` l)
 
 getAlpha :: ZoomAction Double
@@ -89,13 +89,14 @@ compose :: ZoomAction [[Color]]
 compose = do a <- getAlpha
              (sx, sy) <- zoomSource <$> get
              (tx, ty) <- zoomTarget <$> get
+             (w, h) <- zoomWH <$> get
              let (dx, dy) = (truncate $ fromIntegral sx * (1.0 - a) + fromIntegral tx * a, 
                              truncate $ fromIntegral sy * (1.0 - a) + fromIntegral ty * a)
                  zoom | a < 0.5 = (a * 2)
                       | otherwise = 1.0 - (a - 0.5) * 2
-                 zoom' = 1.0 + 20 * zoom
+                 zoom' = 1.0 + (min 20 $ min (fromIntegral w / 16) (fromIntegral h / 16)) * zoom
              --liftIO $ hPutStr stderr $ "zoom=" ++ show zoom' ++ "\n"
-             transpose <$> reverse <$>
+             reverse <$> transpose <$> reverse <$>
                            (forM [0..14] $ \y ->
                             forM [0..15] $ \x ->
                             --liftIO (hPutStr stderr $ show (x, y, dx + truncate (fromIntegral x * zoom'), dy + truncate (fromIntegral y * zoom'))) >>
