@@ -62,10 +62,10 @@ fillTubes = do tubesLength <- Seq.length <$> tunnelTubes <$> get
           appendTube = do prevTube <- getNewestTube
                           segments :: Int <- liftIO $ randomRIO (1, 5)
                           colors <- forM [1..segments] $ const $ liftIO $
-                                    do r <- randomRIO (0, 63)
-                                       g <- randomRIO (0, 127)
-                                       b <- randomRIO (0, 255)
-                                       return $ RGB r g b
+                                    do r <- randomRIO (0, 1.0)
+                                       g <- randomRIO (0, 1.0)
+                                       b <- randomRIO (0, 1.0)
+                                       return $ RGBDouble r g b
                           let a = 0.1
                               tube = Tube { tubeColors = colors, tubeAngle = tubeAngle prevTube + a }
                           st <- get
@@ -86,7 +86,17 @@ tunnel = do advanceCamera
                    let colors = tubeColors tube
                        angle' = angle + tubeAngle tube
                        color = cycle colors !! (truncate $ angle' * (fromIntegral $ length colors) / (2 * pi))
-                   return color
+                       color' = mapColor (/ z) color
+                   return color'
+                   
+mapColor :: (Double -> Double) -> Color -> Color
+mapColor f (RGBDouble r g b) = RGBDouble (f r) (f g) (f b)
+{-mapColor f (RGB r g b) = let c = truncate . 
+                                 (255.0 *) . 
+                                 f .
+                                 fromIntegral .
+                                 (/ 255)
+                         in RGB (c r) (c g) (c b)-}
 
 main = do stateRef <- newIORef $ Tunnel Seq.empty 0 0
           runAnimation $ do st <- readIORef stateRef

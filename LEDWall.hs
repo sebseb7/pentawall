@@ -45,3 +45,4 @@ runAnimation :: IO [[Color]] -> IO ()
 runAnimation gen = gen >>= 
                    (putStr . instructionToCommand . Frame . concat) >>
                    runAnimation gen
+
