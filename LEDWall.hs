@@ -1,6 +1,7 @@
 module LEDWall where
 
 import Text.Printf
+import Control.Monad.State.Lazy
 
 type Word = Int
 
@@ -41,8 +42,8 @@ instructionToCommand (Blank color) = command2 (0, 0) color
 instructionToCommand (Pixel (x, y) color) = command2 (x, y) color
 instructionToCommand (Frame colors) = command3 colors
 
-runAnimation :: IO [[Color]] -> IO ()
-runAnimation gen = gen >>= 
-                   (putStr . instructionToCommand . Frame . concat) >>
-                   runAnimation gen
+runAnimation :: StateT s IO [[Color]] -> s -> IO ()
+runAnimation gen st = do (colors, st') <- runStateT gen st
+                         putStr $ instructionToCommand $ Frame $ concat colors
+                         runAnimation gen st'
 

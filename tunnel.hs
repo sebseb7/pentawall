@@ -1,7 +1,6 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 import Control.Monad.State.Lazy
 import Control.Applicative
-import Data.IORef
 import qualified Data.Sequence as Seq
 import Data.Sequence (Seq, (|>), ViewR((:>), EmptyR))
 import System.Random
@@ -102,8 +101,4 @@ mapColor f (RGBDouble r g b) = RGBDouble (f r) (f g) (f b)
                                  (/ 255)
                          in RGB (c r) (c g) (c b)-}
 
-main = do stateRef <- newIORef $ Tunnel Seq.empty 0 0 0
-          runAnimation $ do st <- readIORef stateRef
-                            (a, st') <- runStateT tunnel st
-                            writeIORef stateRef st'
-                            return a
+main = runAnimation tunnel $ Tunnel Seq.empty 0 0 0
