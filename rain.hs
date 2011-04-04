@@ -39,13 +39,13 @@ composeDrops = do Rain drops <- get
 
 advance :: RainAction ()
 advance = do rainDown
-             addDrop (0, 0) (0, 0) (0.2, 0.6)
+             addDrop (0, 0) (0, 0) (0.2, 1.0)
              addDrop (0.3, 0.6) (0.2, 0.5) (0, 0)
              dropDrops
 
 rainDown = do Rain drops <- get
               let drops' = map (\(Drop x y color) ->
-                                 let dx | y < 6 = 2
+                                 let dx | y < 6 = 3
                                         | otherwise = 1
                                  in Drop x (y + dx) color
                                ) drops
