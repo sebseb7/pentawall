@@ -2,8 +2,9 @@ module LEDWall where
 
 import Text.Printf
 import Control.Monad.State.Lazy
+import Data.Word (Word8)
 
-type Word = Int
+type Word = Word8
 
 data Color = RGB Word Word Word
            | RGBDouble Double Double Double
