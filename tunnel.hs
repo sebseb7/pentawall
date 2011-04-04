@@ -2,12 +2,12 @@ import Control.Monad.State.Lazy
 import Control.Applicative
 import Data.IORef
 import qualified Data.Sequence as Seq
-import Data.Sequence (Seq, (|>))
+import Data.Sequence (Seq, (|>), ViewR((:>), EmptyR))
 import System.Random
 
 import LEDWall
 
-data Tube = Tube { tubeColor :: Color }
+data Tube = Tube { tubeColors :: [Color], tubeAngle :: Double }
 type Tubes = Seq Tube
 data TunnelState = Tunnel { tunnelTubes :: Tubes,
                             tunnelTubesZ :: Integer,
@@ -16,21 +16,30 @@ data TunnelState = Tunnel { tunnelTubes :: Tubes,
 
 type TunnelAction a = StateT TunnelState IO a
 
+getNewestTube :: TunnelAction Tube
+getNewestTube = do tubes <- tunnelTubes <$> get
+                   return $ case Seq.viewr tubes of
+                            _ :> tube -> tube
+                            EmptyR -> Tube { tubeColors = [RGB 0 0 0],
+                                             tubeAngle = 0
+                                           }
+
 getTube :: Double -> TunnelAction Tube
 getTube zOff = do cameraZ <- tunnelCameraZ <$> get
                   let z = cameraZ + zOff
                   
                   tubes <- tunnelTubes <$> get
                   tubesZ <- tunnelTubesZ <$> get
-                  let offset = fromIntegral $ truncate z - tubesZ
+                  let offset :: Integer
+                      offset = truncate z - tubesZ
                       tubesLength = Seq.length tubes
-                      tube | offset >= Seq.length tubes = Seq.index tubes (tubesLength - 1)
-                           | otherwise = Seq.index tubes offset
-                  return tube
+                  case fromInteger offset >= Seq.length tubes of
+                    True -> getNewestTube
+                    False -> return $ Seq.index tubes $ fromInteger offset
 
 advanceCamera :: TunnelAction ()
 advanceCamera = do st <- get
-                   let cameraZ = tunnelCameraZ st + 0.3
+                   let cameraZ = tunnelCameraZ st + 0.5
                        (tubesZ, tubes)
                            | fromIntegral (tunnelTubesZ st) < cameraZ - 1 =
                                (tunnelTubesZ st + 1, Seq.drop 1 $ tunnelTubes st)
@@ -46,12 +55,18 @@ fillTubes = do tubesLength <- Seq.length <$> tunnelTubes <$> get
                when (tubesLength < tubesRetain) $
                     do appendTube
                        fillTubes
-    where tubesRetain = 100
+    where tubesRetain = 8
           
           appendTube :: TunnelAction ()
-          appendTube = do st <- get
-                          c <- liftIO $ randomRIO (0, 255)
-                          let tube = Tube { tubeColor = RGB c c c }
+          appendTube = do prevTube <- getNewestTube
+                          colors <- forM [1..3] $ const $ liftIO $
+                                    do r <- randomRIO (0, 127)
+                                       g <- randomRIO (0, 127)
+                                       b <- randomRIO (0, 63)
+                                       return $ RGB r g b
+                          a <- liftIO $ randomRIO (-0.4, 0.4)
+                          let tube = Tube { tubeColors = colors, tubeAngle = tubeAngle prevTube + a }
+                          st <- get
                           put $ st { tunnelTubes = tunnelTubes st |> tube }
 
 tunnel :: TunnelAction [[Color]]
@@ -66,7 +81,10 @@ tunnel = do advanceCamera
                    
                    --liftIO $ putStrLn $ show (truncate x, truncate y, z)
                    tube <- getTube z
-                   return $ tubeColor tube
+                   let colors = tubeColors tube
+                       angle' = angle + tubeAngle tube
+                       color = cycle colors !! (truncate $ angle' * (fromIntegral $ length colors) / (2 * pi))
+                   return color
 
 main = do stateRef <- newIORef $ Tunnel Seq.empty 0 0
           runAnimation $ do st <- readIORef stateRef
