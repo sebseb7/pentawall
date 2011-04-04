@@ -79,7 +79,9 @@ sampleColor x y zoom = do (r :: Int, g :: Int, b :: Int) <-
                                                  | x' <- [x..(x + zoom - 1)],
                                                    y' <- [y..(y + zoom - 1)]]
                           let l = zoom ^ 2
-                          return $ RGB (fromIntegral $ r `div` l) (fromIntegral $ g `div` l) (fromIntegral $ b `div` l)
+                              c :: Int -> Word
+                              c = fromIntegral . (`div` l)
+                          return $ RGB (c r) (c g) (c b)
 
 getAlpha :: ZoomAction Double
 getAlpha = do t <- getT
