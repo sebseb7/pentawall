@@ -1,3 +1,4 @@
+{-# LANGUAGE ScopedTypeVariables #-}
 import Control.Monad.State.Lazy
 import Control.Applicative
 import Data.IORef
@@ -59,13 +60,14 @@ fillTubes = do tubesLength <- Seq.length <$> tunnelTubes <$> get
           
           appendTube :: TunnelAction ()
           appendTube = do prevTube <- getNewestTube
-                          colors <- forM [1..3] $ const $ liftIO $
-                                    do r <- randomRIO (0, 127)
+                          segments :: Int <- liftIO $ randomRIO (1, 5)
+                          colors <- forM [1..segments] $ const $ liftIO $
+                                    do r <- randomRIO (0, 63)
                                        g <- randomRIO (0, 127)
-                                       b <- randomRIO (0, 63)
+                                       b <- randomRIO (0, 255)
                                        return $ RGB r g b
-                          a <- liftIO $ randomRIO (-0.4, 0.4)
-                          let tube = Tube { tubeColors = colors, tubeAngle = tubeAngle prevTube + a }
+                          let a = 0.1
+                              tube = Tube { tubeColors = colors, tubeAngle = tubeAngle prevTube + a }
                           st <- get
                           put $ st { tunnelTubes = tunnelTubes st |> tube }
 
