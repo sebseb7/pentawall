@@ -12,7 +12,8 @@ data Tube = Tube { tubeColors :: [Color], tubeAngle :: Double }
 type Tubes = Seq Tube
 data TunnelState = Tunnel { tunnelTubes :: Tubes,
                             tunnelTubesZ :: Integer,
-                            tunnelCameraZ :: Double
+                            tunnelCameraZ :: Double,
+                            tunnelCameraAngle :: Double
                           }
 
 type TunnelAction a = StateT TunnelState IO a
@@ -40,13 +41,15 @@ getTube zOff = do cameraZ <- tunnelCameraZ <$> get
 
 advanceCamera :: TunnelAction ()
 advanceCamera = do st <- get
-                   let cameraZ = tunnelCameraZ st + 0.5
+                   let cameraZ = tunnelCameraZ st + 0.1
+                       cameraAngle = tunnelCameraAngle st + 0.01
                        (tubesZ, tubes)
                            | fromIntegral (tunnelTubesZ st) < cameraZ - 1 =
                                (tunnelTubesZ st + 1, Seq.drop 1 $ tunnelTubes st)
                            | otherwise =
                                (tunnelTubesZ st, tunnelTubes st)
                    put $ st { tunnelCameraZ = cameraZ,
+                              tunnelCameraAngle = cameraAngle,
                               tunnelTubesZ = tubesZ,
                               tunnelTubes = tubes }
                    fillTubes
@@ -66,8 +69,8 @@ fillTubes = do tubesLength <- Seq.length <$> tunnelTubes <$> get
                                        g <- randomRIO (0, 1.0)
                                        b <- randomRIO (0, 1.0)
                                        return $ RGBDouble r g b
-                          let a = 0.1
-                              tube = Tube { tubeColors = colors, tubeAngle = tubeAngle prevTube + a }
+                          a <- liftIO $ randomRIO (0.01, pi)
+                          let tube = Tube { tubeColors = colors, tubeAngle = tubeAngle prevTube + a }
                           st <- get
                           put $ st { tunnelTubes = tunnelTubes st |> tube }
 
@@ -78,15 +81,16 @@ tunnel = do advanceCamera
                 do let distance = sqrt $ x ** 2 + y ** 2
                        angle = atan (y / x) + (pi / 2) + (if x > 0 then 0 else pi)
                            
-                       z = 8 / distance
+                       z = 6 / distance
             
                    
                    --liftIO $ putStrLn $ show (truncate x, truncate y, z)
                    tube <- getTube z
+                   cameraAngle <- tunnelCameraAngle <$> get
                    let colors = tubeColors tube
-                       angle' = angle + tubeAngle tube
+                       angle' = angle + cameraAngle + tubeAngle tube
                        color = cycle colors !! (truncate $ angle' * (fromIntegral $ length colors) / (2 * pi))
-                       color' = mapColor (/ z) color
+                       color' = mapColor (/ (10 / distance)) color
                    return color'
                    
 mapColor :: (Double -> Double) -> Color -> Color
@@ -98,7 +102,7 @@ mapColor f (RGBDouble r g b) = RGBDouble (f r) (f g) (f b)
                                  (/ 255)
                          in RGB (c r) (c g) (c b)-}
 
-main = do stateRef <- newIORef $ Tunnel Seq.empty 0 0
+main = do stateRef <- newIORef $ Tunnel Seq.empty 0 0 0
           runAnimation $ do st <- readIORef stateRef
                             (a, st') <- runStateT tunnel st
                             writeIORef stateRef st'
