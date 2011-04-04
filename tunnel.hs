@@ -42,7 +42,7 @@ getTube zOff = do cameraZ <- tunnelCameraZ <$> get
 advanceCamera :: TunnelAction ()
 advanceCamera = do st <- get
                    let cameraZ = tunnelCameraZ st + 0.1
-                       cameraAngle = tunnelCameraAngle st + 0.01
+                       cameraAngle = tunnelCameraAngle st + 0.05
                        (tubesZ, tubes)
                            | fromIntegral (tunnelTubesZ st) < cameraZ - 1 =
                                (tunnelTubesZ st + 1, Seq.drop 1 $ tunnelTubes st)
@@ -65,9 +65,9 @@ fillTubes = do tubesLength <- Seq.length <$> tunnelTubes <$> get
           appendTube = do prevTube <- getNewestTube
                           segments :: Int <- liftIO $ randomRIO (1, 5)
                           colors <- forM [1..segments] $ const $ liftIO $
-                                    do r <- randomRIO (0, 1.0)
-                                       g <- randomRIO (0, 1.0)
-                                       b <- randomRIO (0, 1.0)
+                                    do r <- randomRIO (0.5, 1.0)
+                                       g <- randomRIO (0.5, 1.0)
+                                       b <- randomRIO (0.5, 1.0)
                                        return $ RGBDouble r g b
                           a <- liftIO $ randomRIO (0.01, pi)
                           let tube = Tube { tubeColors = colors, tubeAngle = tubeAngle prevTube + a }
@@ -81,7 +81,7 @@ tunnel = do advanceCamera
                 do let distance = sqrt $ x ** 2 + y ** 2
                        angle = atan (y / x) + (pi / 2) + (if x > 0 then 0 else pi)
                            
-                       z = 6 / distance
+                       z = 16 / distance
             
                    
                    --liftIO $ putStrLn $ show (truncate x, truncate y, z)
@@ -90,7 +90,7 @@ tunnel = do advanceCamera
                    let colors = tubeColors tube
                        angle' = angle + cameraAngle + tubeAngle tube
                        color = cycle colors !! (truncate $ angle' * (fromIntegral $ length colors) / (2 * pi))
-                       color' = mapColor (/ (10 / distance)) color
+                       color' = mapColor (/ sqrt (6 / distance)) color
                    return color'
                    
 mapColor :: (Double -> Double) -> Color -> Color
