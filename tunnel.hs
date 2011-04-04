@@ -40,7 +40,7 @@ getTube zOff = do cameraZ <- tunnelCameraZ <$> get
 
 advanceCamera :: TunnelAction ()
 advanceCamera = do st <- get
-                   let cameraZ = tunnelCameraZ st + 0.1
+                   let cameraZ = tunnelCameraZ st + 0.3
                        cameraAngle = tunnelCameraAngle st + 0.05
                        (tubesZ, tubes)
                            | fromIntegral (tunnelTubesZ st) < cameraZ - 1 =
@@ -58,15 +58,15 @@ fillTubes = do tubesLength <- Seq.length <$> tunnelTubes <$> get
                when (tubesLength < tubesRetain) $
                     do appendTube
                        fillTubes
-    where tubesRetain = 8
+    where tubesRetain = 10
           
           appendTube :: TunnelAction ()
           appendTube = do prevTube <- getNewestTube
-                          segments :: Int <- liftIO $ randomRIO (1, 5)
+                          segments :: Int <- liftIO $ randomRIO (1, 3)
                           colors <- forM [1..segments] $ const $ liftIO $
-                                    do r <- randomRIO (0.5, 1.0)
-                                       g <- randomRIO (0.5, 1.0)
-                                       b <- randomRIO (0.5, 1.0)
+                                    do r <- randomRIO (0.0, 0.2)
+                                       g <- randomRIO (0.6, 0.8)
+                                       b <- randomRIO (0.6, 0.9)
                                        return $ RGBDouble r g b
                           a <- liftIO $ randomRIO (0.01, pi)
                           let tube = Tube { tubeColors = colors, tubeAngle = tubeAngle prevTube + a }
@@ -89,7 +89,7 @@ tunnel = do advanceCamera
                    let colors = tubeColors tube
                        angle' = angle + cameraAngle + tubeAngle tube
                        color = cycle colors !! (truncate $ angle' * (fromIntegral $ length colors) / (2 * pi))
-                       color' = mapColor (/ sqrt (6 / distance)) color
+                       color' = mapColor (/ (0.5 + log z)) color
                    return color'
                    
 mapColor :: (Double -> Double) -> Color -> Color
