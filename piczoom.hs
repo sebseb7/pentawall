@@ -44,8 +44,8 @@ advance = do st <- get
              t <- getT
              when (t > 1.0) $
                   do let (w, h) = zoomWH st'
-                     tx <- liftIO $ randomRIO (0, w - 16)
-                     ty <- liftIO $ randomRIO (0, h - 15)
+                     tx <- liftIO $ randomRIO (8, w - 8)
+                     ty <- liftIO $ randomRIO (8, h - 8)
                      put $ st' { zoomStep = 0,
                                  zoomSource = zoomTarget st',
                                  zoomTarget = (tx, ty)
@@ -69,18 +69,16 @@ getColor x y = do picture <- zoomPic <$> get
               where norm = fromIntegral . (.&. 0xFF)
 
 
-sampleColor :: Int -> Int -> Int -> ZoomAction Color
-sampleColor x y zoom = do (r :: Int, g :: Int, b :: Int) <-
-                              foldM (\(r, g, b) (x', y') ->
-                                      do RGB r' g' b' <- getColor x' y'
-                                         return (r + fromIntegral r', g + fromIntegral g', b + fromIntegral b')
-                                    ) (0, 0, 0) [(x', y')
-                                                 | x' <- [x..(x + zoom - 1)],
-                                                   y' <- [y..(y + zoom - 1)]]
-                          let l = zoom ^ 2
-                              c :: Int -> Word
-                              c = fromIntegral . (`div` l)
-                          return $ RGB (c r) (c g) (c b)
+sampleColor :: [(Int, Int)] -> ZoomAction Color
+sampleColor xys = do (r :: Int, g :: Int, b :: Int) <-
+                       foldM (\(r, g, b) (x', y') ->
+                               do RGB r' g' b' <- getColor x' y'
+                                  return (r + fromIntegral r', g + fromIntegral g', b + fromIntegral b')
+                             ) (0, 0, 0) xys
+                     let l = max 1 $ length xys
+                         c :: Int -> Word
+                         c = fromIntegral . (`div` l)
+                     return $ RGB (c r) (c g) (c b)
 
 getAlpha :: ZoomAction Double
 getAlpha = do t <- getT
