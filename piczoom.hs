@@ -7,7 +7,6 @@ import System.Environment
 import Data.Char (toLower)
 import System.FilePath (takeExtension)
 import System.Exit
-import Graphics.GD hiding (Color)
 import Data.Array.Unboxed
 import Data.Array.IO
 import Control.Monad (forM_)
@@ -17,6 +16,7 @@ import Data.List (transpose)
 import Data.Bits
 
 import LEDWall
+import LoadImage
 
 data ZoomState = Zoom { zoomPic :: Picture, 
                         zoomWH :: (Int, Int), 
@@ -26,7 +26,6 @@ data ZoomState = Zoom { zoomPic :: Picture,
                       }
 type ZoomAction a = StateT ZoomState IO a
 
-type Picture = UArray (Int, Int) Int
 
 transitionDuration = 60
 
@@ -92,50 +91,31 @@ compose = do a <- getAlpha
              (sx, sy) <- zoomSource <$> get
              (tx, ty) <- zoomTarget <$> get
              (w, h) <- zoomWH <$> get
-             let (dx, dy) = (truncate $ fromIntegral sx * (1.0 - a) + fromIntegral tx * a, 
-                             truncate $ fromIntegral sy * (1.0 - a) + fromIntegral ty * a)
-                 maxZoom = min 20 $ min (fromIntegral w / 16) (fromIntegral h / 16)
+             let (dx, dy) = (fromIntegral sx * (1.0 - a) + fromIntegral tx * a, 
+                             fromIntegral sy * (1.0 - a) + fromIntegral ty * a)
+                 maxZoom = min 15 $ min (fromIntegral w / 16) (fromIntegral h / 16)
                  zoom = 1.0 + maxZoom * (1 - (a * 2 - 1) ** 2)
              --liftIO $ hPutStr stderr $ "zoom=" ++ show zoom ++ "\n"
              reverse <$> transpose <$> reverse <$>
-                           (forM [0..14] $ \y ->
-                            forM [0..15] $ \x ->
-                            --liftIO (hPutStr stderr $ show (x, y, dx + truncate (fromIntegral x * zoom), dy + truncate (fromIntegral y * zoom))) >>
-                            sampleColor (dx + truncate (fromIntegral (x - 7) * zoom + 7)) (dy + truncate (fromIntegral (y - 7) * zoom + 7)) (truncate zoom))
+                           (forM [-7..7] $ \y ->
+                            forM [-7..8] $ \x ->
+                            let fx x = x * zoom + 7 + dx
+                                fy y = y * zoom + 7 + dy
+                                x1 = truncate $ fx x
+                                y1 = truncate $ fy y
+                                x2 = max x1 $ truncate (fx $ x + 1) - 1
+                                y2 = max y1 $ truncate (fy $ y + 1) - 1
+                            in sampleColor [(x', y')
+                                            | x' <- [x1..x2],
+                                              y' <- [y1..y2]]
+                           )
 
 zoomer = do advance
             compose
 
 main = getArgs >>= main'
 main' [f] = do
-          load <- case map toLower (takeExtension f) of
-                    ".jpg"  -> return loadJpegFile
-                    ".jpeg" -> return loadJpegFile
-                    ".png"  -> return loadPngFile
-                    ".gif"  -> return loadGifFile
-                    _       -> die
-          image <- load f
-          (w, h, picture) <- imageToPicture image
+          (w, h, picture) <- loadImage f
                     
           runAnimation zoomer $ Zoom picture (w, h) (truncate transitionDuration) (0, 0) (0, 0)
 
-imageToPicture :: Image -> IO (Int, Int, Picture)
-imageToPicture img =
-    do (w, h) <- imageSize img
-       let maxX = w - 1
-           maxY = h - 1
-           bounds = ((0, 0), (maxX, maxY))
-       cm <- newArray bounds 0 :: IO (IOUArray (Int, Int) Int)
-       putStrLn "converting..."
-       {-# SCC "forPixels" #-} forM_ (range bounds) $ \pos ->
-         (fromIntegral <$>
-          {-# SCC "getPixel" #-} getPixel pos img) >>=
-         {-# SCC "writeArray" #-} writeArray cm pos
-       putStrLn "converted"
-       (w, h, ) <$> freeze cm
-
-die :: IO a
-die = do
-    hPutStr stderr
-         "Usage: scaleimage <x> <y> input.[png,gif,jpg] output.[png,gif,jpg]"
-    exitWith (ExitFailure 1)
