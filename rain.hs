@@ -26,12 +26,12 @@ dropColors (Drop dropX dropY dropColor) =
               then mapColor (* (max 0 $ 1 - fromIntegral (dropY - y) / 16)) dropColor
               else RGBDouble 0 0 0
             ) [0..15]
-      ) [0..15]
+      ) [0..14]
 
 composeDrops :: RainAction [[Color]]
 composeDrops = do Rain drops <- get
                   let background = map (\y ->
-                                         map (const $ RGBDouble 0 0 0) [0..14]
+                                         map (const $ RGBDouble 0 0 0) [0..15]
                                        ) [0..15]
                   return $ foldl (\pixels drop ->
                                    zipWith (zipWith addColors) pixels (dropColors drop)
