@@ -46,10 +46,10 @@ warn localtime(time).' started';
 #{
 	my	%intermediaterequests;				# this stores intermediate requests 
 	
-	my  $bindSocket = IO::Socket::INET->new(Proto    => 'tcp',Reuse=>1,LocalPort => $tcpPort , Listen => 10) 							#	create listen socket
+	my  $bindSocket = IO::Socket::INET->new(Proto => 'tcp',Reuse=>1,LocalPort => $tcpPort , Listen => 10) 							#	create listen socket
 							|| die "Can't create Socket on host xx on port xx due to  $!\n";				
-    my	$socketflags	= fcntl($bindSocket, F_GETFL, 0)					|| die "Can't get flags on Socket due to  $!\n";				#	get the flags and 
-    fcntl($bindSocket, F_SETFL, $socketflags | O_NONBLOCK) 					|| die "Can't set O_NONBLOCK flag on Socket due to $!\n";		#	set socket nonblocking
+	my	$socketflags	= fcntl($bindSocket, F_GETFL, 0)					|| die "Can't get flags on Socket due to  $!\n";				#	get the flags and 
+	fcntl($bindSocket, F_SETFL, $socketflags | O_NONBLOCK) 					|| die "Can't set O_NONBLOCK flag on Socket due to $!\n";		#	set socket nonblocking
 #	$bindSocket->sockopt(SO_RCVBUF, 220);		
 		
 	my $select = IO::Select->new($bindSocket);
@@ -82,7 +82,7 @@ warn localtime(time).' started';
 		####
 
 
-	    foreach my $socket ($select->can_read(1))
+		foreach my $socket ($select->can_read(1))
 		{
 			if( $socket == $bindSocket )								#	if the socket that is ready is the bindSocket a new Connection has occurred 
 			{		
@@ -167,7 +167,7 @@ warn localtime(time).' started';
 		####
 		#	Write to the Sockets, that are ready
 		####
-	    foreach my $socket ($select->can_write(1))
+		foreach my $socket ($select->can_write(1))
 		{
 			my $host = undef;
 			my $port = undef;
@@ -383,8 +383,8 @@ sub setModulePixel($$$$$)
 
 sub esc($)
 {
-    my $data = shift;
-    
+	my $data = shift;
+
 	return chr(hex(65)).chr(hex(1)) if $data == hex(23);
 	return chr(hex(65)).chr(hex(2)) if $data == hex(42);
 	return chr(hex(65)).chr(hex(3)) if $data == hex(65);
