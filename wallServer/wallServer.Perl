@@ -294,8 +294,8 @@ sub handlerequest($$$$)
 	#change prio
 	elsif($data =~ /^04(\d\d)$/)
 	{
-		my $targetPrio = int $1;
-		return 'bad'."\r\n" if $targetPrio > 3;
+		my $targetPrio = hex $1;
+		return 'bad'."\r\n" if $targetPrio > $prioLevels;
 
 		$intermediaterequests{$host.':'.$port.':'.$lport}{'prio'} = $targetPrio;
 
