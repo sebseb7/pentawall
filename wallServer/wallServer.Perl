@@ -29,7 +29,9 @@ my $bufferPath = '/dev/shm/';	#where to store the buffer
 my $prioLevels = 4;				#begins with level id 0
 my $defaultLevel = 1;
 my $currentPrio = 0;
-
+my $isRecording = 0;
+my $recordPath = '/opt/wallRecords/';
+my $currentRecordingFile;
 
 my $frameBuffer={};  			#one buffer for each prioLevel
 my %activePrios;				#show which connections is on with level
@@ -273,6 +275,14 @@ sub handlerequest($$$$)
 		close outfile;
 		rename '/dev/shm/pentawall_image_tmp'.$myPrio,'/dev/shm/pentawall_image'.$myPrio;
 		
+		if(($isRecording)and($myPrio == $currentPrio))
+		{
+			open outfile,'>>'.$recordPath.$currentRecordingFile.'.rec';
+			print outfile int((time-$currentRecordingFile)*1000).' ';
+			print outfile $data."\r\n";
+			close outfile;
+		}
+		
 		return 'ok'."\r\n";
 	}
 	#set Frame
@@ -288,6 +298,15 @@ sub handlerequest($$$$)
 		print outfile $frameBuffer->{$myPrio}."\n";
 		close outfile;
 		rename '/dev/shm/pentawall_image_tmp'.$myPrio,'/dev/shm/pentawall_image'.$myPrio;
+
+		if(($isRecording)and($myPrio == $currentPrio))
+		{
+			open outfile,'>>'.$recordPath.$currentRecordingFile.'.rec';
+			print outfile int((time-$currentRecordingFile)*1000).' ';
+			print outfile $data."\r\n";
+			close outfile;
+		}
+
 
 		return 'ok'."\r\n";
 	}
@@ -306,6 +325,18 @@ sub handlerequest($$$$)
 
 
 		return 'ok'."\r\n";
+	}
+	elsif($data =~ /^05$/)
+	{
+		$isRecording = 1;
+		$currentRecordingFile = int time;
+		
+		return 'ok'."\r\n";
+	}
+	elsif($data =~ /^06$/)
+	{
+		$isRecording = 0;
+		return $currentRecordingFile."\r\n";
 	}
 	else
 	{
