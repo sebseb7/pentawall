@@ -66,9 +66,9 @@ fillTubes = do tubesLength <- Seq.length <$> tunnelTubes <$> get
           appendTube = do prevTube <- getNewestTube
                           segments :: Int <- liftIO $ randomRIO (1, 3)
                           colors <- forM [1..segments] $ const $ liftIO $
-                                    do r <- randomRIO (0.0, 0.2)
+                                    do r <- randomRIO (0.0, 1.0)
                                        g <- randomRIO (0.6, 0.8)
-                                       b <- randomRIO (0.6, 0.9)
+                                       b <- randomRIO (0.6, 1.0)
                                        return $ RGBDouble r g b
                           a <- liftIO $ randomRIO (0.01, pi)
                           let tube = Tube { tubeColors = colors, tubeAngle = tubeAngle prevTube + a }
