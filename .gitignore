@@ -1,0 +1,7 @@
+*.o
+*.hi
+*.jpg
+*.jpeg
+*.png
+*.gif
+!font4x6.png
