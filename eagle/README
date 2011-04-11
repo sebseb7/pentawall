@@ -1,0 +1,5 @@
+this folder contains the schematics and board layout files for the hardware
+
+5led.* the LED Module
+ledmaster.* the master module (i2c to usb bridge)
+

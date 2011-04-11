@@ -1,0 +1,5 @@
+This is the Code for the microcontroller on the master module
+
+it acts as a uart -> i2c bridge to access the ledmodules via uart
+
+with an ftdi it can be connected to usb
