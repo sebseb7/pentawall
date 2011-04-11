@@ -243,8 +243,13 @@ sub handlerequest($$$$)
 	
 	my $myPrio = $intermediaterequests{$host.':'.$port.':'.$lport}{'prio'};
 	
+	#keep alive
+	if($data =~ /^01$/)
+	{
+		return "ok\r\n";
+	}
 	#set Pixel
-	if($data =~ /^02(..)(..)(..)(..)(..)$/)
+	elsif($data =~ /^02(..)(..)(..)(..)(..)$/)
 	{
 		my $x = hex($1);
 		my $y = hex($2);
@@ -256,9 +261,6 @@ sub handlerequest($$$$)
 		my $blue = hex($5);
 		warn $data && return 'bad'."\r\n" if $x > 16;
 		warn $data && return 'bad'."\r\n" if $y > 15;
-		warn $data && return 'bad'."\r\n" if $red > 255;
-		warn $data && return 'bad'."\r\n" if $green > 255;
-		warn $data && return 'bad'."\r\n" if $blue > 255;
 
 		if(($x == 0)&&($y == 0))
 		{
@@ -270,6 +272,7 @@ sub handlerequest($$$$)
 			substr($frameBuffer->{$myPrio},(($x-1)*15+($y-1))*6,6,$red_h.$green_h.$blue_h);
 			setPixel($x,$y,$red,$green,$blue) if $myPrio == $currentPrio;
 		}
+
 		open outfile,'>/dev/shm/pentawall_image_tmp'.$myPrio;
 		print outfile $frameBuffer->{$myPrio}."\n";
 		close outfile;
@@ -281,6 +284,13 @@ sub handlerequest($$$$)
 			print outfile int((time-$currentRecordingFile)*1000).' ';
 			print outfile $data."\r\n";
 			close outfile;
+
+			if((time-$currentRecordingFile) > 60*5)
+			{
+				warn localtime(time).' autostop';
+				$isRecording=0;
+			}
+
 		}
 		
 		return 'ok'."\r\n";
@@ -305,6 +315,13 @@ sub handlerequest($$$$)
 			print outfile int((time-$currentRecordingFile)*1000).' ';
 			print outfile $data."\r\n";
 			close outfile;
+			
+			if((time-$currentRecordingFile) > 60*5)
+			{
+				warn localtime(time).' autostop';
+				$isRecording=0;
+			}
+			
 		}
 
 
@@ -326,17 +343,39 @@ sub handlerequest($$$$)
 
 		return 'ok'."\r\n";
 	}
+	#start recording
 	elsif($data =~ /^05$/)
 	{
+		warn localtime(time).' start recording';
 		$isRecording = 1;
 		$currentRecordingFile = int time;
 		
 		return 'ok'."\r\n";
 	}
+	#stop recording
 	elsif($data =~ /^06$/)
 	{
 		$isRecording = 0;
 		return $currentRecordingFile."\r\n";
+	}
+	# play recorded file
+	elsif($data =~ /^07(\d+)$/)
+	{
+		my $fileid = $1;
+
+
+		#### to implement
+
+
+		return "ok\r\n";
+	}
+	# stop play
+	elsif($data =~ /^08$/)
+	{
+
+		#### to implement
+
+		return "ok\r\n";
 	}
 	else
 	{
