@@ -68,7 +68,9 @@ warn localtime(time).' started';
 		if(-f $bufferPath.'pentawall_image'.$level)
 		{
 			open infile,$bufferPath.'pentawall_image'.$level;
-			$frameBuffer->{$level} = <infile>;
+			my $data = <infile>;
+			chomp($data);
+			$frameBuffer->{$level} = $data;
 			close infile;		
 		}
 	}
@@ -97,7 +99,7 @@ warn localtime(time).' started';
 				{
 					$select->add($client);									#	add the newly created socket to our select
 	
-					warn localtime(time).' added'.$host.':'.$port.':'.$lport;
+#					warn localtime(time).' added'.$host.':'.$port.':'.$lport;
 					$intermediaterequests{$host.':'.$port.':'.$lport}{'lastactive'}=time();
 					$intermediaterequests{$host.':'.$port.':'.$lport}{'socket'}=\$client;
 					$intermediaterequests{$host.':'.$port.':'.$lport}{'prio'}=$defaultLevel;
@@ -143,7 +145,7 @@ warn localtime(time).' started';
 						}
 						else
 						{
-							warn localtime(time).' readfail a '.$host.':'.$port.':'.$lport;
+#							warn localtime(time).' readfail a '.$host.':'.$port.':'.$lport;
 							$select->remove($socket);
 							close($socket);	
 							delete $activePrios{$intermediaterequests{$host.':'.$port.':'.$lport}{'prio'}}->{$host.':'.$port.':'.$lport};
@@ -202,7 +204,7 @@ warn localtime(time).' started';
 			}
 			else
 			{
-				warn localtime(time).' closex';
+#				warn localtime(time).' closex';
 				$select->remove($socket);
 				close($socket);	
 				delete $activePrios{$intermediaterequests{$host.':'.$port.':'.$lport}{'prio'}}->{$host.':'.$port.':'.$lport};
@@ -223,7 +225,7 @@ warn localtime(time).' started';
 #			$timeout = 3600 if $intermediaterequests{$hostport}{'prio'} == 0;
 			
 			next if $intermediaterequests{$hostport}{'lastactive'} > (time()-300);
-			warn localtime(time).' inactive '.$hostport;
+#			warn localtime(time).' inactive '.$hostport;
 			$select->remove(${$intermediaterequests{$hostport}{'socket'}});
 			close(${$intermediaterequests{$hostport}{'socket'}}) if	${$intermediaterequests{$hostport}{'socket'}};
 			delete $activePrios{$intermediaterequests{$hostport}{'prio'}}->{$hostport};
@@ -269,7 +271,7 @@ sub handlerequest($$$$)
 		}
 		else
 		{
-			substr($frameBuffer->{$myPrio},(($x-1)*15+($y-1))*6,6,$red_h.$green_h.$blue_h);
+			substr($frameBuffer->{$myPrio},(($y-1)*16+($x-1))*6,6,$red_h.$green_h.$blue_h);
 			setPixel($x,$y,$red,$green,$blue) if $myPrio == $currentPrio;
 		}
 
@@ -350,6 +352,11 @@ sub handlerequest($$$$)
 		$isRecording = 1;
 		$currentRecordingFile = int time;
 		
+
+			open outfile,'>>'.$recordPath.$currentRecordingFile.'.rec';
+			print outfile '0 03'.$frameBuffer->{$myPrio}."\r\n";
+			close outfile;
+		
 		return 'ok'."\r\n";
 	}
 	#stop recording
@@ -397,6 +404,9 @@ sub updatePrioLevel()
 		$currentPrio = $newPrio;
 		setFrame($frameBuffer->{$currentPrio});
 	}
+	use Data::Dumper;
+#	warn Data::Dumper->Dump([\%activePrios]);
+#	warn Data::Dumper->Dump([\%intermediaterequests]);
 }
 
 sub setPixel($$$$$)
@@ -407,7 +417,18 @@ sub setPixel($$$$$)
 	my $green  =shift;
 	my $blue = shift;
 
-	my $module = 1+($x-1)*3+((($y-1) - ($y-1)%5)/5);
+#	0 1 2 3 4 5 6 7
+#    1 1 1 1 1 2 2 2 
+    
+#    0 1 2 3 4 0 1 2 %5
+    
+#    0 0 0 0 0 5 5 5 
+    
+
+	my $module = $x + ((($y-1)-(($y-1)%5))/5)*16;
+	
+#	my $module = 1+($x-1)*3+((($y-1) - ($y-1)%5)/5);
+#	my $led = (($y-1)%5)+1;
 	my $led = (($y-1)%5)+1;
 	
 	
@@ -483,7 +504,8 @@ sub setFrame($)
 
 	my $ppp = 60;
 
-		
+
+#	warn $frame;		
 	for(0..((720/$ppp) - 1))
 	{
 		my $packet = $_;
