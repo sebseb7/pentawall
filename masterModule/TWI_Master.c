@@ -66,7 +66,7 @@ uint8_t TWIM_Init (uint32_t TWI_Bitrate)
 */
 
 	//FIX THIS 
-	TWBR=31;
+	TWBR=40;//31 did crash randomly
 //	TWBR = ((F_CPU/TWI_Bitrate)-16)/2;
 //	if (TWBR < 11) return FALSE;
 
