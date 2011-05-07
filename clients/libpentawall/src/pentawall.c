@@ -49,6 +49,10 @@ void hardcoded_config(struct pw_config *c){
 	}
 
 
+static int connect_wall(struct pentawall_ctx *wall , struct pw_config *c);
+static void send_command(static pentawall_ctx *wall , char command, 
+		size_t datalen ,char * data);
+
 struct pentawall_ctx {
 	int sfd;
 	struct addrinfo *walladdr;
@@ -92,6 +96,34 @@ static int connect_wall(struct pentawall_ctx *wall , struct pw_config *c)
 
 }
 
+static void send_command(static pentawall_ctx *wall , char command, 
+		size_t datalen ,char * data){
+	int i;
+	char * buf = NULL;
+	char resp[256];
+	buf = malloc(datalen + 5);
+	if (! buf){
+		debugf("alloc fail! scheiße");
+		return;
+	}
+	snprintf(buf,2,"%02x",command);
+	if (datalen && data){
+		memcpy(buf+2,data,datalen);
+	}
+	strcpy(buf+2+datalen,"\r\n");
+
+	i = send (wall->sfd , buf , datalen +5 ,0);
+	if (i < (datalen+5)) {
+		debugf("huh i send only %d bytes (-1 error)"i );
+	}
+	free(buf);
+	recv(wall->sfd , resp , 256,0 /*flags*/);
+	return;
+}
+
+
+
+
 struct pentawall_ctx * 
 pentaw_init(struct pw_config *c)
 {
@@ -131,3 +163,13 @@ pentaw_deinit(pw_ctx_t wall){
 }
 
 
+
+#ifdef TEST_FREESTANDING
+
+int main(void)
+{
+
+	return 0;
+}
+
+#endif

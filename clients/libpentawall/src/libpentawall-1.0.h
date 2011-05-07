@@ -13,6 +13,7 @@
  *     john at tuxcode org   || <<</>>
  * ============================================================================
  */
+#pragma once
 
 #include <stdint.h>
 
@@ -27,5 +28,14 @@ typedef struct {
 	uint8_t b;
 	uint8_t a;
 } wallpixel;
+
+/*lib init + connection*/
+struct pentawall_ctx * pentaw_init(struct pw_config *c);
+/*destruction*/
+void pentaw_deinit(pw_ctx_t wall);
+
+/*set one pixel*/
+void pantaw_setpixel(pw_ctx_t wall, wallpixel *p);
+
 
 
