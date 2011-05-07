@@ -10,9 +10,7 @@
  *       Revision:  none
  *       Compiler:  gcc
  *
- *         Author:  Johannes Steinmetz (js), john@tuxcode.org
- *        Company:  tuxcode.org
- *
+ *     john at tuxcode org   || <<</>>
  * ============================================================================
  */
 
