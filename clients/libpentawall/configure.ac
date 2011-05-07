@@ -1,4 +1,4 @@
-AC_INIT(src/libpentawall.c)
+AC_INIT(src/pentawall.c)
 AM_INIT_AUTOMAKE(libpentawall,0.0.1)
 AC_GNU_SOURCE
 AM_CONFIG_HEADER(config.h)
