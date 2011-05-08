@@ -1,7 +1,7 @@
 /*
  * ============================================================================
  *
- *       Filename:  pentawall.h
+ *       Filename:  libpentawall-1.0.h
  *
  *    Description:  
  *
@@ -17,8 +17,9 @@
 
 #include <stdint.h>
 
+/*opaque declarations*/
 typedef   struct pentawall_ctx *pw_ctx_t;
-
+struct pw_config ;
 
 typedef struct {
 	uint16_t x ;
