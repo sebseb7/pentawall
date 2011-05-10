@@ -16,5 +16,6 @@ AC_PROG_MAKE_SET
 AC_OUTPUT([
 	   Makefile
 	   src/Makefile
+	   src/libpentawall-1.0.pc
 	   ])
 
