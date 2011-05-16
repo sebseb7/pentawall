@@ -27,7 +27,7 @@ $0='pentawall-server';
 
 ##globals
 
-my $useIp6 = 0; # has to be set in the BEGIN Block
+my $useIp6 = 1; 
 my $usbDevice = '/dev/serial/by-id/usb-FTDI_FT232R_USB_UART_A400eRcF-if00-port0';
 my $tcpPort = 1338;
 my $bufferPath = '/dev/shm/';	#where to store the buffer 
@@ -41,18 +41,14 @@ my $currentRecordingFile;
 my $frameBuffer={};  			#one buffer for each prioLevel
 my %activePrios;				#show which connections is on with level
 
-							
-warn localtime(time).' started';
-
-
-
-
 die $ip6available if $useIp6 and $ip6available;
 
 
 close STDOUT;
 open STDOUT,'>>logfile2.txt';
 open STDERR,'>&STDOUT';
+
+warn localtime(time).' started';
 
 
 #{
