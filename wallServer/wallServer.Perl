@@ -1,6 +1,16 @@
 #!/usr/bin/perl
 
 
+my $ip6available;
+BEGIN
+{
+	eval
+	{
+		require IO::Socket::INET6;
+	};
+	$ip6available = $@ if $@;
+}
+
 use strict;
 use POSIX;
 use IO::Socket;
@@ -13,17 +23,11 @@ use Time::HiRes qw(usleep time);
 $0='pentawall-server';
 
 
-#exit if fork();
-#close STDERR;
-close STDOUT;
-open STDOUT,'>>logfile2.txt';
-open STDERR,'>&STDOUT';
-#$|=1;
 
 
 ##globals
 
-my $useIp6 = 1;
+my $useIp6 = 0; # has to be set in the BEGIN Block
 my $usbDevice = '/dev/serial/by-id/usb-FTDI_FT232R_USB_UART_A400eRcF-if00-port0';
 my $tcpPort = 1338;
 my $bufferPath = '/dev/shm/';	#where to store the buffer 
@@ -37,15 +41,18 @@ my $currentRecordingFile;
 my $frameBuffer={};  			#one buffer for each prioLevel
 my %activePrios;				#show which connections is on with level
 
-if ($useIp6) {
-  use IO::Socket::INET6;
-}
 							
 warn localtime(time).' started';
 
 
 
 
+die $ip6available if $useIp6 and $ip6available;
+
+
+close STDOUT;
+open STDOUT,'>>logfile2.txt';
+open STDERR,'>&STDOUT';
 
 
 #{
