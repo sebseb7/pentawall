@@ -1,14 +1,14 @@
 #!/usr/bin/perl
 
 
-my $ip6available;
+my $ip6notavailable;
 BEGIN
 {
 	eval
 	{
 		require IO::Socket::INET6;
 	};
-	$ip6available = $@ if $@;
+	$ip6notavailable = $@ if $@;
 }
 
 use strict;
@@ -41,7 +41,7 @@ my $currentRecordingFile;
 my $frameBuffer={};  			#one buffer for each prioLevel
 my %activePrios;				#show which connections is on with level
 
-die $ip6available if $useIp6 and $ip6available;
+die $ip6notavailable if $useIp6 and $ip6notavailable;
 
 
 close STDOUT;
