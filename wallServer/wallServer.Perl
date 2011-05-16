@@ -23,6 +23,7 @@ open STDERR,'>&STDOUT';
 
 ##globals
 
+my $useIp6 = 1;
 my $usbDevice = '/dev/serial/by-id/usb-FTDI_FT232R_USB_UART_A400eRcF-if00-port0';
 my $tcpPort = 1338;
 my $bufferPath = '/dev/shm/';	#where to store the buffer 
@@ -36,7 +37,9 @@ my $currentRecordingFile;
 my $frameBuffer={};  			#one buffer for each prioLevel
 my %activePrios;				#show which connections is on with level
 
-
+if ($useIp6) {
+  use IO::Socket::INET6;
+}
 							
 warn localtime(time).' started';
 
@@ -46,10 +49,15 @@ warn localtime(time).' started';
 
 
 #{
-	my	%intermediaterequests; # this stores intermediate requests 
-	
-	my  $bindSocket = IO::Socket::INET->new(Proto => 'tcp',Reuse=>1,LocalPort => $tcpPort , Listen => 10) 							#	create listen socket
+	my %intermediaterequests; # this stores intermediate requests 
+        my $bindSocket;
+	if ($useIp6) {
+		$bindSocket = IO::Socket::INET6->new(LocalAddr => '[::]', Proto => 'tcp',Reuse=>1,LocalPort => $tcpPort , Listen => 10) 							#	create listen socket
 							|| die "Can't create Socket on host xx on port xx due to  $!\n";				
+	} else {
+                $bindSocket = IO::Socket::INET->new(Proto => 'tcp',Reuse=>1,LocalPort => $tcpPort , Listen => 10)                                                   #       create listen socket
+                                                        || die "Can't create Socket on host xx on port xx due to  $!\n";
+	}
 	my	$socketflags	= fcntl($bindSocket, F_GETFL, 0)					|| die "Can't get flags on Socket due to  $!\n";				#	get the flags and 
 	fcntl($bindSocket, F_SETFL, $socketflags | O_NONBLOCK) 					|| die "Can't set O_NONBLOCK flag on Socket due to $!\n";		#	set socket nonblocking
 #	$bindSocket->sockopt(SO_RCVBUF, 220);		

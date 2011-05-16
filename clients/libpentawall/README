@@ -1,0 +1,3 @@
+do autoreconf -si once you cloned this git
+
+then you may read INSTALL and ./configure --help
