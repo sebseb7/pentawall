@@ -80,7 +80,7 @@ int main (void)
 	uint8_t pixel = 0;
 	uint8_t module  = 0;
 
-	uint8_t		TWIS_ResonseType;
+	uint8_t	TWIS_ResonseType;
 
 	uint8_t temp_r = 0;
 	uint8_t temp_g = 0;
@@ -113,7 +113,7 @@ int main (void)
 	
 					module = TWIS_ReadAck();
 
-					if(module == 255)
+					if(module >= 254)
 					{
 						for(uint8_t n=0;n<3;n++)
 						{
@@ -164,14 +164,27 @@ int main (void)
 							}	
 						}
 
-						module = TWIS_ReadNack();
-						SetLed(1,led_1_r,led_1_g,led_1_b);
-						SetLed(2,led_2_r,led_2_g,led_2_b);
-						SetLed(3,led_3_r,led_3_g,led_3_b);
-						SetLed(4,led_4_r,led_4_g,led_4_b);
-						SetLed(5,led_5_r,led_5_g,led_5_b);
-
+						TWIS_ReadNack();
 						TWIS_Stop();
+
+						if(module == 255)
+						{
+							SetLed(1,led_1_r,led_1_g,led_1_b);
+							SetLed(2,led_2_r,led_2_g,led_2_b);
+							SetLed(3,led_3_r,led_3_g,led_3_b);
+							SetLed(4,led_4_r,led_4_g,led_4_b);
+							SetLed(5,led_5_r,led_5_g,led_5_b);
+						}
+
+						if(module == 254)
+						{
+							SetDC(1,led_1_r,led_1_g,led_1_b);
+							SetDC(2,led_2_r,led_2_g,led_2_b);
+							SetDC(3,led_3_r,led_3_g,led_3_b);
+							SetDC(4,led_4_r,led_4_g,led_4_b);
+							SetDC(5,led_5_r,led_5_g,led_5_b);
+						}
+
 					}
 					else
 					{
@@ -179,11 +192,12 @@ int main (void)
 						uint8_t red = TWIS_ReadAck();
 						uint8_t green = TWIS_ReadAck();
 						uint8_t blue = TWIS_ReadNack();
+						TWIS_Stop();
+
 						if((module == ADDR)||(module == 0))
 						{
 								SetLed(pixel,red,green,blue);
 						}
-						TWIS_Stop();
 					}					
 					
 					break;

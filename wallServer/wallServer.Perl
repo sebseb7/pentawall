@@ -53,16 +53,17 @@ warn localtime(time).' started';
 
 #{
 	my %intermediaterequests; # this stores intermediate requests 
-        my $bindSocket;
+	my $bindSocket;
 	if ($useIp6) {
 		$bindSocket = IO::Socket::INET6->new(LocalAddr => '[::]', Proto => 'tcp',Reuse=>1,LocalPort => $tcpPort , Listen => 10) 							#	create listen socket
-							|| die "Can't create Socket on host xx on port xx due to  $!\n";				
+			|| die "Can't create Socket on host xx on port xx due to  $!\n";				
 	} else {
-                $bindSocket = IO::Socket::INET->new(Proto => 'tcp',Reuse=>1,LocalPort => $tcpPort , Listen => 10)                                                   #       create listen socket
-                                                        || die "Can't create Socket on host xx on port xx due to  $!\n";
+		$bindSocket = IO::Socket::INET->new(Proto => 'tcp',Reuse=>1,LocalPort => $tcpPort , Listen => 10)                                                   #       create listen socket
+			|| die "Can't create Socket on host xx on port xx due to  $!\n";
 	}
 	my	$socketflags	= fcntl($bindSocket, F_GETFL, 0)					|| die "Can't get flags on Socket due to  $!\n";				#	get the flags and 
 	fcntl($bindSocket, F_SETFL, $socketflags | O_NONBLOCK) 					|| die "Can't set O_NONBLOCK flag on Socket due to $!\n";		#	set socket nonblocking
+
 #	$bindSocket->sockopt(SO_RCVBUF, 220);		
 		
 	my $select = IO::Select->new($bindSocket);
